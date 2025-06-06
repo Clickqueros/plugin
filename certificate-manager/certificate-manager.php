@@ -3,7 +3,7 @@
  * Plugin Name: Certificate Manager
  * Description: Allows users to create certificates and manage approvals.
  * Version: 1.0.0
- * Author: OpenAI
+ * Author: Eddier Acosta
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
