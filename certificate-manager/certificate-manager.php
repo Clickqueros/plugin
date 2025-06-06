@@ -20,6 +20,9 @@ class CM_Certificate_Manager {
         add_shortcode( 'certificate_form', array( $this, 'certificate_form_shortcode' ) );
         add_shortcode( 'certificate_lookup', array( $this, 'certificate_lookup_shortcode' ) );
         add_action( 'wp_loaded', array( $this, 'handle_form_submission' ) );
+        add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+        add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
     }
 
     public function activate() {
@@ -190,6 +193,16 @@ class CM_Certificate_Manager {
             return false;
         }
         $dompdf = new \Dompdf\Dompdf();
+        $settings = get_option( 'cm_settings', array() );
+        $bg_image   = isset( $settings['image'] ) ? $settings['image'] : '';
+        $name_x     = isset( $settings['name_x'] ) ? $settings['name_x'] : 0;
+        $name_y     = isset( $settings['name_y'] ) ? $settings['name_y'] : 0;
+        $position_x = isset( $settings['position_x'] ) ? $settings['position_x'] : 0;
+        $position_y = isset( $settings['position_y'] ) ? $settings['position_y'] : 0;
+        $course_x   = isset( $settings['course_x'] ) ? $settings['course_x'] : 0;
+        $course_y   = isset( $settings['course_y'] ) ? $settings['course_y'] : 0;
+        $code_x     = isset( $settings['code_x'] ) ? $settings['code_x'] : 0;
+        $code_y     = isset( $settings['code_y'] ) ? $settings['code_y'] : 0;
         ob_start();
         include plugin_dir_path( __FILE__ ) . 'templates/certificate-template.php';
         $html = ob_get_clean();
@@ -239,6 +252,76 @@ class CM_Certificate_Manager {
             wp_reset_postdata();
         }
         return ob_get_clean();
+    }
+
+    public function add_settings_page() {
+        add_options_page( 'Certificate Settings', 'Certificate Settings', 'manage_options', 'cm-settings', array( $this, 'render_settings_page' ) );
+    }
+
+    public function register_settings() {
+        register_setting( 'cm_settings_group', 'cm_settings' );
+    }
+
+    public function enqueue_admin_scripts( $hook ) {
+        if ( $hook === 'settings_page_cm-settings' ) {
+            wp_enqueue_media();
+        }
+    }
+
+    public function render_settings_page() {
+        $settings = get_option( 'cm_settings', array() );
+        $defaults = array(
+            'image'      => '',
+            'name_x'     => 100,
+            'name_y'     => 100,
+            'position_x' => 100,
+            'position_y' => 150,
+            'course_x'   => 100,
+            'course_y'   => 200,
+            'code_x'     => 100,
+            'code_y'     => 250,
+        );
+        $settings = wp_parse_args( $settings, $defaults );
+        ?>
+        <div class="wrap">
+            <h1>Certificate Settings</h1>
+            <form method="post" action="options.php">
+                <?php settings_fields( 'cm_settings_group' ); ?>
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row">Background Image</th>
+                        <td>
+                            <input type="text" name="cm_settings[image]" id="cm_settings_image" value="<?php echo esc_attr( $settings['image'] ); ?>" class="regular-text" />
+                            <input type="button" class="button" id="cm_settings_image_button" value="Upload" />
+                            <p class="description">Select an image to use as the certificate background.</p>
+                        </td>
+                    </tr>
+                    <tr><th scope="row">Name X</th><td><input type="number" name="cm_settings[name_x]" value="<?php echo esc_attr( $settings['name_x'] ); ?>" /></td></tr>
+                    <tr><th scope="row">Name Y</th><td><input type="number" name="cm_settings[name_y]" value="<?php echo esc_attr( $settings['name_y'] ); ?>" /></td></tr>
+                    <tr><th scope="row">Position X</th><td><input type="number" name="cm_settings[position_x]" value="<?php echo esc_attr( $settings['position_x'] ); ?>" /></td></tr>
+                    <tr><th scope="row">Position Y</th><td><input type="number" name="cm_settings[position_y]" value="<?php echo esc_attr( $settings['position_y'] ); ?>" /></td></tr>
+                    <tr><th scope="row">Course X</th><td><input type="number" name="cm_settings[course_x]" value="<?php echo esc_attr( $settings['course_x'] ); ?>" /></td></tr>
+                    <tr><th scope="row">Course Y</th><td><input type="number" name="cm_settings[course_y]" value="<?php echo esc_attr( $settings['course_y'] ); ?>" /></td></tr>
+                    <tr><th scope="row">Code X</th><td><input type="number" name="cm_settings[code_x]" value="<?php echo esc_attr( $settings['code_x'] ); ?>" /></td></tr>
+                    <tr><th scope="row">Code Y</th><td><input type="number" name="cm_settings[code_y]" value="<?php echo esc_attr( $settings['code_y'] ); ?>" /></td></tr>
+                </table>
+                <?php submit_button(); ?>
+            </form>
+        </div>
+        <script type="text/javascript">
+        jQuery(document).ready(function($){
+            $('#cm_settings_image_button').on('click', function(e){
+                e.preventDefault();
+                var frame = wp.media({title:'Select or Upload Image', button:{text:'Use this image'}, multiple:false});
+                frame.on('select', function(){
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    $('#cm_settings_image').val(attachment.url);
+                });
+                frame.open();
+            });
+        });
+        </script>
+        <?php
     }
 }
 
