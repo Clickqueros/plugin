@@ -1,5 +1,7 @@
 # Certificate Manager Plugin
 
+Autor: **Eddier Acosta**
+
 Este plugin permite crear certificados a través de un formulario y gestionarlos mediante un flujo de aprobación.
 
 ## Funcionalidades
