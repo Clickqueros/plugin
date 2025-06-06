@@ -186,10 +186,10 @@ class CM_Certificate_Manager {
     }
 
     private function generate_pdf( $first, $last, $position, $course, $code ) {
-        if ( ! class_exists( '\\Dompdf\\Dompdf' ) ) {
+        if ( ! class_exists( '\Dompdf\Dompdf' ) ) {
             return false;
         }
-        $dompdf = new Dompdf\\Dompdf();
+        $dompdf = new \Dompdf\Dompdf();
         ob_start();
         include plugin_dir_path( __FILE__ ) . 'templates/certificate-template.php';
         $html = ob_get_clean();
